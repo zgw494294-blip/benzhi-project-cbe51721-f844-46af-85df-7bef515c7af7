@@ -26,6 +26,9 @@ func (s Service) Open(id string, expectedCents int64, denominations []int64, tol
 	if _, exists := ledger.Sessions[id]; exists {
 		return Session{}, ErrDuplicateSession
 	}
+	if active := countActive(ledger); active > 0 {
+		return Session{}, ErrSessionOpen
+	}
 	ledger.Sessions[id] = session
 	if err := s.Store.Save(ledger); err != nil {
 		return Session{}, err
@@ -92,4 +95,14 @@ func (s Service) loadOrCreate() (Ledger, error) {
 		return NewLedger(), nil
 	}
 	return Ledger{}, err
+}
+
+func countActive(ledger Ledger) int {
+	count := 0
+	for _, session := range ledger.Sessions {
+		if session.Status == StatusActive {
+			count++
+		}
+	}
+	return count
 }

@@ -21,6 +21,7 @@ var (
 	ErrValidation          = errors.New("validation failed")
 	ErrSessionNotFound     = errors.New("session not found")
 	ErrDuplicateSession    = errors.New("session already exists")
+	ErrSessionOpen         = errors.New("another session is still active")
 	ErrSessionClosed       = errors.New("session is already reconciled")
 	ErrDuplicateCount      = errors.New("denomination was already counted")
 	ErrUnknownDenomination = errors.New("denomination is not configured")
@@ -89,6 +90,7 @@ func (l Ledger) Validate() error {
 	if l.Sessions == nil {
 		return fmt.Errorf("%w: sessions must be an object", ErrValidation)
 	}
+	active := 0
 	for id, session := range l.Sessions {
 		if id != session.ID {
 			return fmt.Errorf("%w: session key %q does not match id %q", ErrValidation, id, session.ID)
@@ -96,6 +98,12 @@ func (l Ledger) Validate() error {
 		if err := session.Validate(); err != nil {
 			return err
 		}
+		if session.Status == StatusActive {
+			active++
+		}
+	}
+	if active > 1 {
+		return fmt.Errorf("%w: ledger has %d active sessions", ErrValidation, active)
 	}
 	return nil
 }
