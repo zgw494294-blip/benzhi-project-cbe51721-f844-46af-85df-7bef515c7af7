@@ -140,6 +140,11 @@ func (s Session) Validate() error {
 		if s.ActualCents != 0 || s.VarianceCents != 0 {
 			return fmt.Errorf("%w: active session %q has receipt totals", ErrValidation, s.ID)
 		}
+		if s.complete() {
+			if _, err := s.total(); err != nil {
+				return err
+			}
+		}
 	case StatusBalanced, StatusVariance:
 		if !s.complete() {
 			return fmt.Errorf("%w: reconciled session %q is incomplete", ErrValidation, s.ID)
