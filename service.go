@@ -26,6 +26,11 @@ func (s Service) Open(id string, expectedCents int64, denominations []int64, tol
 	if _, exists := ledger.Sessions[id]; exists {
 		return Session{}, ErrDuplicateSession
 	}
+	for _, existing := range ledger.Sessions {
+		if existing.Status == StatusActive {
+			return Session{}, ErrDuplicateSession
+		}
+	}
 	ledger.Sessions[id] = session
 	if err := s.Store.Save(ledger); err != nil {
 		return Session{}, err
