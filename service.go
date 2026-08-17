@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"sync"
 )
+
+var countMu sync.Mutex
 
 type Service struct {
 	Store Store
@@ -34,6 +37,17 @@ func (s Service) Open(id string, expectedCents int64, denominations []int64, tol
 }
 
 func (s Service) Count(id string, denomination, quantity int64) (Session, error) {
+	_, session, err := s.loadSession(id)
+	if err != nil {
+		return Session{}, err
+	}
+	if err := session.AddCount(denomination, quantity); err != nil {
+		return Session{}, err
+	}
+
+	countMu.Lock()
+	defer countMu.Unlock()
+
 	ledger, session, err := s.loadSession(id)
 	if err != nil {
 		return Session{}, err
