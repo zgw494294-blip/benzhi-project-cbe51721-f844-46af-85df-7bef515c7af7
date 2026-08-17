@@ -123,6 +123,9 @@ func (s Session) Validate() error {
 		}
 		seen[denomination] = struct{}{}
 	}
+	if s.Counts == nil {
+		return fmt.Errorf("%w: counts must be an object", ErrValidation)
+	}
 	for denomination, quantity := range s.Counts {
 		if _, exists := seen[denomination]; !exists {
 			return fmt.Errorf("%w: %d is not configured", ErrValidation, denomination)
