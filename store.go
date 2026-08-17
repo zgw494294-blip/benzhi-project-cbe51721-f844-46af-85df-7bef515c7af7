@@ -61,7 +61,7 @@ func (s Store) Load() (Ledger, error) {
 	}
 	data, readErr := io.ReadAll(file)
 	closeErr := file.Close()
-	if readErr != nil {
+	if readErr != nil || closeErr != nil {
 		return Ledger{}, fmt.Errorf("read ledger: %w", errors.Join(readErr, closeErr))
 	}
 
